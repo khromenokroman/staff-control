@@ -415,6 +415,14 @@ std::string build_add_page() {
             font-size: 14px;
             opacity: 0.75;
         }
+
+        .error {
+            display: none;
+            color: #ff8fa3;
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
@@ -422,10 +430,17 @@ std::string build_add_page() {
         <h1>Добавить сотрудника</h1>
         <p class="subtitle">Заполните данные сотрудника и нажмите кнопку добавления.</p>
 
-        <form action="/add" method="post">
+        <form id="addForm" action="/add" method="post" novalidate>
             <div class="field">
                 <label for="name">Имя сотрудника</label>
-                <input type="text" id="name" name="name" required placeholder="Например: Иван Иванов">
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    placeholder="Например: Иван Иванов">
+                <div class="hint">Имя должно начинаться с буквы и содержать только буквы, пробелы или дефисы.</div>
+                <div class="error" id="nameError">Имя введено некорректно.</div>
             </div>
 
             <div class="field">
@@ -435,10 +450,9 @@ std::string build_add_page() {
                     id="pin_card"
                     name="pin_card"
                     placeholder="Если пусто — сгенерируется автоматически"
-                    inputmode="numeric"
-                    pattern="^[0-9]*$"
-                    title="Номер карты должен содержать только цифры">
-                <div class="hint">Только цифры. Можно оставить поле пустым.</div>
+                    inputmode="numeric">
+                <div class="hint">Можно оставить поле пустым. Если заполняете — только цифры.</div>
+                <div class="error" id="pinError">Номер карты должен содержать только цифры.</div>
             </div>
 
             <div class="field">
@@ -455,6 +469,60 @@ std::string build_add_page() {
             </div>
         </form>
     </div>
+
+    <script>
+        const form = document.getElementById('addForm');
+        const nameInput = document.getElementById('name');
+        const pinInput = document.getElementById('pin_card');
+        const nameError = document.getElementById('nameError');
+        const pinError = document.getElementById('pinError');
+
+        function isValidName(value) {
+            const re = /^[A-Za-zА-Яа-яЁё]+([A-Za-zА-Яа-яЁё -]*[A-Za-zА-Яа-яЁё])?$/u;
+            return re.test(value.trim());
+        }
+
+        function isValidPin(value) {
+            return value === "" || /^[0-9]+$/.test(value);
+        }
+
+        form.addEventListener('submit', function (e) {
+            const nameValue = nameInput.value.trim();
+            const pinValue = pinInput.value.trim();
+
+            let ok = true;
+
+            if (!isValidName(nameValue)) {
+                nameError.style.display = 'block';
+                ok = false;
+            } else {
+                nameError.style.display = 'none';
+            }
+
+            if (!isValidPin(pinValue)) {
+                pinError.style.display = 'block';
+                ok = false;
+            } else {
+                pinError.style.display = 'none';
+            }
+
+            if (!ok) {
+                e.preventDefault();
+            }
+        });
+
+        nameInput.addEventListener('input', function () {
+            if (isValidName(nameInput.value)) {
+                nameError.style.display = 'none';
+            }
+        });
+
+        pinInput.addEventListener('input', function () {
+            if (isValidPin(pinInput.value)) {
+                pinError.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
 )html";
