@@ -430,8 +430,15 @@ std::string build_add_page() {
 
             <div class="field">
                 <label for="pin_card">Номер карты</label>
-                <input type="text" id="pin_card" name="pin_card" placeholder="Если пусто — сгенерируется автоматически">
-                <div class="hint">Можно оставить поле пустым.</div>
+                <input
+                    type="text"
+                    id="pin_card"
+                    name="pin_card"
+                    placeholder="Если пусто — сгенерируется автоматически"
+                    inputmode="numeric"
+                    pattern="^[0-9]*$"
+                    title="Номер карты должен содержать только цифры">
+                <div class="hint">Только цифры. Можно оставить поле пустым.</div>
             </div>
 
             <div class="field">
