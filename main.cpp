@@ -9,9 +9,11 @@
 
 using json = nlohmann::json;
 
-const std::string JSON_FILE = "info_user.json";
-const std::string PATH_KASSA1 = "/home/raipo/share/kassa1/";
-const std::string PATH_KASSA2 = "/home/raipo/share/kassa2/";
+const std::string JSON_FILE = "/tmp/info_user.json";
+// const std::string PATH_KASSA1 = "/home/raipo/share/kassa1/";
+const std::string PATH_KASSA1 = "/tmp/kassa1/";
+// const std::string PATH_KASSA2 = "/home/raipo/share/kassa2/";
+const std::string PATH_KASSA2 = "/tmp/kassa2/";
 
 struct UserInfo {
     int password{};
