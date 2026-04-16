@@ -5,14 +5,13 @@ project(staff-control
         HOMEPAGE_URL "")
 
 set(CMAKE_CXX_STANDARD 20)
-#find_package(fmt REQUIRED)
+find_package(fmt REQUIRED)
 find_package(Threads REQUIRED)
 
 configure_file(Version.in Version @ONLY)
 
 add_executable(${PROJECT_NAME} main.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
-#target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt cpp-httplib)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt Threads::Threads)
 
 install(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
