@@ -9,7 +9,6 @@ find_package(fmt REQUIRED)
 find_package(Threads REQUIRED)
 
 configure_file(Version.in Version @ONLY)
-configure_file(packaging/postinst.in postinst @ONLY)
 
 add_executable(${PROJECT_NAME}
         src/main.cpp
