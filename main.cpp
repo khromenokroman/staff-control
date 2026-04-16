@@ -1060,14 +1060,14 @@ int main() {
     httplib::Server svr;
 
     /* Временно для тестов */
-    // std::ofstream f(JSON_FILE);
-    // if (!f.is_open()) {
-    //     throw std::runtime_error("Failed to open JSON file for writing");
-    // }
-    // Users u;
-    // ::nlohmann::json j = u;
-    // f << j.dump(4);
-    // f.close();
+    std::ofstream f(JSON_FILE);
+    if (!f.is_open()) {
+        throw std::runtime_error("Failed to open JSON file for writing");
+    }
+    Users u;
+    ::nlohmann::json j = u;
+    f << j.dump(4);
+    f.close();
     // =====================================
 
     svr.Get("/", [](const httplib::Request &, httplib::Response &res) {
@@ -1088,51 +1088,25 @@ int main() {
     });
 
     svr.Post("/add", [](const httplib::Request &req, httplib::Response &res) {
-        Users users = load_users();
-
-        std::string name = req.get_param_value("name");
-        std::string pin_card_str = req.get_param_value("pin_card");
-        std::string role_str = req.get_param_value("role");
-
-        if (name.empty()) {
-            res.set_content("Имя не может быть пустым", "text/plain; charset=utf-8");
-            return;
-        }
-
-        int role = 0;
         try {
-            role = std::stoi(role_str);
-        } catch (...) {
-            res.set_content("Некорректная роль", "text/plain; charset=utf-8");
-            return;
+            auto users = load_users();
+
+            /* доверяем тому что проверки на web отработали и тут валидные значения */
+            std::string name = req.get_param_value("name");
+            std::string pin_card_str = req.get_param_value("pin_card");
+            std::string role_str = req.get_param_value("role");
+
+            UserInfo info;
+            info.password = random_int(1, 1000000);
+            info.pin_card = pin_card_str.empty() ? random_int(1, 10000000) : std::stoi(pin_card_str);
+            info.role = std::stoi(role_str);
+            users[name] = info;
+            save_users(users);
+
+            res.set_redirect("/employees");
+        } catch (std::exception &e) {
+            res.set_content(build_error_page(e.what()), "text/html; charset=utf-8");
         }
-
-        if (role != 1 && role != 2) {
-            res.set_content("Роль должна быть 1 или 2", "text/plain; charset=utf-8");
-            return;
-        }
-
-        int pin_card = 0;
-        if (pin_card_str.empty()) {
-            pin_card = random_int(1, 10000000);
-        } else {
-            try {
-                pin_card = std::stoi(pin_card_str);
-            } catch (...) {
-                res.set_content("Некорректный номер карты", "text/plain; charset=utf-8");
-                return;
-            }
-        }
-
-        UserInfo info;
-        info.password = random_int(1, 1000000);
-        info.pin_card = pin_card;
-        info.role = role;
-
-        users[name] = info;
-        save_users(users);
-
-        res.set_redirect("/employees");
     });
 
     svr.Post("/delete", [](const httplib::Request &req, httplib::Response &res) {
