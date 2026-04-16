@@ -1,11 +1,12 @@
+#include <fmt/format.h>
 #include <fstream>
-#include "httplib.h"
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <random>
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include "httplib.h"
 
 using json = nlohmann::json;
 
@@ -19,9 +20,11 @@ struct UserInfo {
     int password{};
     int pin_card{};
     int role{};
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(UserInfo, password, pin_card, role)
 };
 
-using Users = std::unordered_map<std::string, UserInfo>;
+using Users = std::map<std::string, UserInfo>;
 
 int random_int(int from, int to) {
     static std::random_device rd;
@@ -58,42 +61,29 @@ std::string html_escape(const std::string &s) {
     return out;
 }
 
-Users load_info() {
-    Users users;
+Users load_users() {
     std::ifstream f(JSON_FILE);
     if (!f.is_open()) {
-        return users;
+        auto err = errno;
+        throw std::runtime_error(::fmt::format("Ошибка открытия файла БД '{}': {}", JSON_FILE, strerror(err)));
     }
 
     json j;
-    try {
-        f >> j;
-        for (auto it = j.begin(); it != j.end(); ++it) {
-            UserInfo info;
-            info.password = it.value().value("password", 0);
-            info.pin_card = it.value().value("pin_card", 0);
-            info.role = it.value().value("role", 0);
-            users[it.key()] = info;
-        }
-    } catch (...) {
-        return {};
-    }
+    f >> j;
 
-    return users;
+    return j.get<Users>();
 }
 
-bool save_info(const Users &users) {
-    json j;
-    for (const auto &[name, info]: users) {
-        j[name] = {{"password", info.password}, {"pin_card", info.pin_card}, {"role", info.role}};
-    }
+void save_users(Users const &users) {
+    ::nlohmann::json const j = users;
 
     std::ofstream f(JSON_FILE);
-    if (!f.is_open())
-        return false;
+    if (!f.is_open()) {
+        auto err = errno;
+        throw std::runtime_error(::fmt::format("Ошибка открытия файла БД '{}': {}", JSON_FILE, strerror(err)));
+    }
 
     f << j.dump(4);
-    return true;
 }
 
 std::string role_name(int role) {
@@ -815,7 +805,7 @@ bool write_kassa_file(const std::string &path, const std::string &f_name, const 
 }
 
 void export_to_kassa() {
-    Users users = load_info();
+    Users users = load_users();
     write_kassa_file(PATH_KASSA1, "Pos01.spr", "Pos01.flz", users);
     write_kassa_file(PATH_KASSA2, "Pos02.spr", "Pos02.flz", users);
 }
@@ -942,21 +932,36 @@ std::string build_export_page() {
 int main() {
     httplib::Server svr;
 
+    /* Временно для тестов */
+    std::ofstream f(JSON_FILE);
+    if (!f.is_open()) {
+        throw std::runtime_error("Failed to open JSON file for writing");
+    }
+    Users u;
+    ::nlohmann::json j = u;
+    f << j.dump(4);
+    f.close();
+    // =====================================
+
     svr.Get("/", [](const httplib::Request &, httplib::Response &res) {
         res.set_content(build_index_page(), "text/html; charset=utf-8");
     });
 
     svr.Get("/employees", [](const httplib::Request &, httplib::Response &res) {
-        Users users = load_info();
-        res.set_content(build_employees_page(users), "text/html; charset=utf-8");
-    });
+        try {
+            Users users = load_users();
+            res.set_content(build_employees_page(users), "text/html; charset=utf-8");
+        }catch (std::exception &e) {
+            std::cout << e.what() << std::endl;
+        }
+        });
 
     svr.Get("/add", [](const httplib::Request &, httplib::Response &res) {
         res.set_content(build_add_page(), "text/html; charset=utf-8");
     });
 
     svr.Post("/add", [](const httplib::Request &req, httplib::Response &res) {
-        Users users = load_info();
+        Users users = load_users();
 
         std::string name = req.get_param_value("name");
         std::string pin_card_str = req.get_param_value("pin_card");
@@ -998,22 +1003,19 @@ int main() {
         info.role = role;
 
         users[name] = info;
-        if (!save_info(users)) {
-            res.set_content("Не удалось сохранить файл", "text/plain; charset=utf-8");
-            return;
-        }
+        save_users(users);
 
         res.set_redirect("/employees");
     });
 
     svr.Post("/delete", [](const httplib::Request &req, httplib::Response &res) {
-        Users users = load_info();
+        Users users = load_users();
         std::string name = req.get_param_value("name");
 
         auto it = users.find(name);
         if (it != users.end()) {
             users.erase(it);
-            save_info(users);
+            save_users(users);
         }
 
         res.set_redirect("/employees");
