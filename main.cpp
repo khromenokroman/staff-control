@@ -11,10 +11,10 @@
 using json = nlohmann::json;
 
 const std::string JSON_FILE = "/tmp/info_user.json";
-// const std::string PATH_KASSA1 = "/home/raipo/share/kassa1/";
-const std::string PATH_KASSA1 = "/tmp/kassa1/";
-// const std::string PATH_KASSA2 = "/home/raipo/share/kassa2/";
-const std::string PATH_KASSA2 = "/tmp/kassa2/";
+// const std::string PATH_KASSA1 = "/home/raipo/share/kassa1";
+const std::string PATH_KASSA1 = "/tmp/kassa1";
+// const std::string PATH_KASSA2 = "/home/raipo/share/kassa2";
+const std::string PATH_KASSA2 = "/tmp/kassa2";
 
 struct UserInfo {
     int password{};
@@ -775,16 +775,19 @@ std::string build_employees_page(const Users &users) {
     return out.str();
 }
 
-bool write_kassa_file(const std::string &path, const std::string &f_name, const std::string &fl_name,
-                      const Users &users) {
-    std::ofstream flag_file(path + fl_name);
-    if (!flag_file.is_open())
-        return false;
+void write_kassa_file(std::string_view path, std::string_view f_name, std::string_view fl_name, Users const &users) {
+    std::ofstream flag_file(::fmt::format("{}/{}", path, fl_name));
+    if (!flag_file.is_open()) {
+        auto err = errno;
+        throw std::runtime_error(::fmt::format("Ошибка создания файла флага для выгрузки на кассу '{}/{}': {}", path,
+                                               fl_name, strerror(err)));
+    }
     flag_file << "";
     flag_file.close();
 
     std::ostringstream text;
     text << "##@@&&\n#\n$$$DELETEALLUSERS\n$$$ADDUSERS\n";
+    /* Дефолтный пользователь должен быть всегда, чтобы не потерять доступ до кассы */
     text << "1;Системный администратор;Системный администратор;1;147896325;;;\n";
 
     int count = 2;
@@ -797,15 +800,18 @@ bool write_kassa_file(const std::string &path, const std::string &f_name, const 
         ++count;
     }
 
-    std::ofstream main_file(path + f_name, std::ios::binary);
-    if (!main_file.is_open())
-        return false;
+    std::ofstream main_file(::fmt::format("{}/{}", path, f_name));
+    if (!main_file.is_open()) {
+        auto err = errno;
+        throw std::runtime_error(::fmt::format("Ошибка создания файла выгрузки на кассу '{}/{}': {}", path,
+                                               f_name, strerror(err)));
+    }
     main_file << text.str();
-    return true;
+    main_file.close();
 }
 
 void export_to_kassa() {
-    Users users = load_users();
+    auto const users = load_users();
     write_kassa_file(PATH_KASSA1, "Pos01.spr", "Pos01.flz", users);
     write_kassa_file(PATH_KASSA2, "Pos02.spr", "Pos02.flz", users);
 }
