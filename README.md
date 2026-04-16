@@ -49,6 +49,26 @@ apt install -y ./staff-control_<версия>_amd64.deb
 - unit-файл systemd: `/usr/lib/systemd/system/staff-control.service`
 - БД: `/tmp/staff-control/staff-control.service`
 
+### БД(Стартовая)
+````json
+{
+  "Оператор": {
+    "password": 205249,
+    "pin_card": 9837170,
+    "role": 2
+  },
+  "Кассир1": {
+    "password": 205149,
+    "pin_card": 9857170,
+    "role": 1
+  },
+  "Кассир2": {
+    "password": 305149,
+    "pin_card": 9257170,
+    "role": 1
+  }
+}
+````
 
 ### Параметры(cfg.json)
 
