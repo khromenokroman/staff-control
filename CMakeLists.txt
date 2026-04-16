@@ -9,6 +9,7 @@ find_package(fmt REQUIRED)
 find_package(Threads REQUIRED)
 
 configure_file(Version.in Version @ONLY)
+configure_file(packaging/postinst.in postinst @ONLY)
 
 add_executable(${PROJECT_NAME}
         src/main.cpp
@@ -41,5 +42,7 @@ set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/postinst")
+
 
 include(CPack)
