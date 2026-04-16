@@ -929,18 +929,145 @@ std::string build_export_page() {
 )html";
 }
 
+std::string build_error_page(const std::string &message) {
+    std::ostringstream out;
+    out << R"html(
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ошибка</title>
+    <style>
+        :root {
+            --bg1: #1f2a44;
+            --bg2: #243b55;
+            --text: #f5f5f5;
+            --shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+            --danger1: #ef476f;
+            --danger2: #ff7b7b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Cambria, serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(255, 209, 102, 0.20), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(239, 71, 111, 0.18), transparent 30%),
+                linear-gradient(135deg, var(--bg1), var(--bg2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 680px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            padding: 42px;
+            text-align: center;
+        }
+
+        .icon {
+            width: 84px;
+            height: 84px;
+            margin: 0 auto 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            background: linear-gradient(135deg, var(--danger1), var(--danger2));
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25);
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: 40px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+
+        p {
+            margin: 0 0 28px;
+            font-size: 20px;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 56px;
+            padding: 0 24px;
+            border-radius: 18px;
+            text-decoration: none;
+            font-family: Cambria, serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2a44;
+            background: linear-gradient(135deg, #ffd166, #ffb703);
+            box-shadow: 0 12px 22px rgba(0, 0, 0, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 28px rgba(0, 0, 0, 0.28);
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="icon">!</div>
+        <h1>Ошибка</h1>
+        <p>)html";
+
+    out << html_escape(message);
+
+    out << R"html(</p>
+        <div class="actions">
+            <a href="/">Вернуться на главную</a>
+        </div>
+    </div>
+</body>
+</html>
+)html";
+
+    return out.str();
+}
+
 int main() {
     httplib::Server svr;
 
     /* Временно для тестов */
-    std::ofstream f(JSON_FILE);
-    if (!f.is_open()) {
-        throw std::runtime_error("Failed to open JSON file for writing");
-    }
-    Users u;
-    ::nlohmann::json j = u;
-    f << j.dump(4);
-    f.close();
+    // std::ofstream f(JSON_FILE);
+    // if (!f.is_open()) {
+    //     throw std::runtime_error("Failed to open JSON file for writing");
+    // }
+    // Users u;
+    // ::nlohmann::json j = u;
+    // f << j.dump(4);
+    // f.close();
     // =====================================
 
     svr.Get("/", [](const httplib::Request &, httplib::Response &res) {
@@ -952,7 +1079,7 @@ int main() {
             auto const users = load_users();
             res.set_content(build_employees_page(users), "text/html; charset=utf-8");
         } catch (std::exception &e) {
-            std::cout << e.what() << std::endl;
+            res.set_content(build_error_page(e.what()), "text/html; charset=utf-8");
         }
     });
 
