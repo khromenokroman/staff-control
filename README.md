@@ -47,9 +47,9 @@ apt install -y ./staff-control_<версия>_amd64.deb
 - бинарник: `/usr/bin/staff-control`
 - конфиг(Настройки): `/etc/staff-control/cfg.json`
 - unit-файл systemd: `/usr/lib/systemd/system/staff-control.service`
-- БД: `/tmp/staff-control/staff-control.service`
+- БД: `/tmp/staff-control/staff-control.json`
 
-### БД(Стартовая)
+### БД staff-control.json
 ````json
 {
   "Оператор": {
@@ -69,8 +69,14 @@ apt install -y ./staff-control_<версия>_amd64.deb
   }
 }
 ````
+- ключ верхнего уровня — это имя сотрудника;
+- `password` — пароль сотрудника;
+- `pin_card` — номер карты сотрудника;
+- `role` — роль сотрудника:
+  - `1` — кассир;
+  - `2` — старший кассир.
 
-### Параметры(cfg.json)
+### Параметры cfg.json
 
 ````json
 {
