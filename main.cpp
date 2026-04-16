@@ -1110,16 +1110,19 @@ int main() {
     });
 
     svr.Post("/delete", [](const httplib::Request &req, httplib::Response &res) {
-        Users users = load_users();
-        std::string name = req.get_param_value("name");
+        try {
+            auto users = load_users();
+            std::string name = req.get_param_value("name");
 
-        auto it = users.find(name);
-        if (it != users.end()) {
-            users.erase(it);
-            save_users(users);
+            if (auto const it = users.find(name); it != users.end()) {
+                users.erase(it);
+                save_users(users);
+            }
+
+            res.set_redirect("/employees");
+        } catch (std::exception &e) {
+            res.set_content(build_error_page(e.what()), "text/html; charset=utf-8");
         }
-
-        res.set_redirect("/employees");
     });
 
     svr.Get("/export", [](const httplib::Request &, httplib::Response &res) {
