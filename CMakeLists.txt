@@ -10,13 +10,19 @@ find_package(Threads REQUIRED)
 
 configure_file(Version.in Version @ONLY)
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME}
+        src/main.cpp
+        src/staff_control.cpp
+)
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt Threads::Threads)
 
 install(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES configuration/cfg.json
         DESTINATION /etc/staff-control/
+)
+install(FILES db/staff-control.json
+        DESTINATION /tmp/staff-control/
 )
 install(FILES systemd/staff-control.service
         DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system
