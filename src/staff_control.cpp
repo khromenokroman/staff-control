@@ -64,6 +64,7 @@ void StaffControl::run() {
             info.role = std::stoi(role_str);
             users[name] = info;
             save_users(users);
+            syslog(LOG_INFO, "Добавлен пользователь '%s':\n%s", name.c_str(), ::nlohmann::json(info).dump(2).c_str());
 
             res.set_redirect("/employees");
         } catch (std::exception &ex) {
@@ -81,6 +82,7 @@ void StaffControl::run() {
             if (auto const it = users.find(name); it != users.end()) {
                 users.erase(it);
                 save_users(users);
+                syslog(LOG_INFO, "Удален пользователь '%s'", name.c_str());
             }
 
             res.set_redirect("/employees");
@@ -122,6 +124,7 @@ Users StaffControl::load_users() const {
 
     ::nlohmann::json j;
     f >> j;
+    syslog(LOG_DEBUG, "Получены пользователи из БД:\n%s", j.dump(2).c_str());
 
     return j.get<Users>();
 }
@@ -135,7 +138,8 @@ void StaffControl::save_users(Users const &users) {
         throw std::runtime_error(::fmt::format("Ошибка открытия файла БД '{}': {}", m_config.path_db, strerror(err)));
     }
 
-    f << j.dump(4);
+    f << j.dump(2);
+    syslog(LOG_DEBUG, "Пользователи записаны в БД:\n%s", j.dump(2).c_str());
 }
 
 std::string StaffControl::role_name(int role) const {
@@ -1111,6 +1115,7 @@ void StaffControl::write_kassa_file(std::string_view path, std::string_view f_na
     }
     flag_file << "";
     flag_file.close();
+    syslog(LOG_INFO, "Создан файл флаг для выгрузки на кассу '%s/%s'", path.data(), fl_name.data());
 
     std::ostringstream text;
     text << "##@@&&\n#\n$$$DELETEALLUSERS\n$$$ADDUSERS\n";
@@ -1135,6 +1140,8 @@ void StaffControl::write_kassa_file(std::string_view path, std::string_view f_na
     }
     main_file << text.str();
     main_file.close();
+    syslog(LOG_INFO, "Создан файл для выгрузки на кассу '%s/%s' с данными:\n%s", path.data(), fl_name.data(),
+           text.str().c_str());
 }
 void StaffControl::export_to_kassa() const {
     auto const users = load_users();
