@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.18.4)
 project(staff-control
         VERSION 0.1.0
         LANGUAGES CXX
-        HOMEPAGE_URL "")
+        HOMEPAGE_URL "https://github.com/khromenokroman/staff-control")
 
 set(CMAKE_CXX_STANDARD 20)
 find_package(fmt REQUIRED)
