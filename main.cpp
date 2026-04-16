@@ -803,8 +803,8 @@ void write_kassa_file(std::string_view path, std::string_view f_name, std::strin
     std::ofstream main_file(::fmt::format("{}/{}", path, f_name));
     if (!main_file.is_open()) {
         auto err = errno;
-        throw std::runtime_error(::fmt::format("Ошибка создания файла выгрузки на кассу '{}/{}': {}", path,
-                                               f_name, strerror(err)));
+        throw std::runtime_error(
+                ::fmt::format("Ошибка создания файла выгрузки на кассу '{}/{}': {}", path, f_name, strerror(err)));
     }
     main_file << text.str();
     main_file.close();
@@ -1141,6 +1141,9 @@ int main() {
     });
 
     std::cout << "Server started on http://localhost:8080\n";
-    svr.listen("0.0.0.0", 8080);
-    return 0;
+    if (!svr.listen("0.0.0.0", 8080)) {
+        std::cout << "Failed to start the server\n";
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
