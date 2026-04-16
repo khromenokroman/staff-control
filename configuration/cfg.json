@@ -1,4 +1,19 @@
 {
   "port": 8080,
   "log_level": 6,
+  "path_db": "/tmp/staff-control/staff-control.json",
+  "targets": [
+    {
+      "name": "kassa1",
+      "path": "/tmp/kassa1",
+      "file_name": "Pos01.spr",
+      "flag_name": "Pos01.flz"
+    },
+    {
+      "name": "kassa2",
+      "path": "/tmp/kassa2",
+      "file_name": "Pos02.spr",
+      "flag_name": "Pos02.flz"
+    }
+  ]
 }
