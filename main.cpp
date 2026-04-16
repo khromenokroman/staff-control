@@ -8,8 +8,6 @@
 #include <unordered_map>
 #include "httplib.h"
 
-using json = nlohmann::json;
-
 const std::string JSON_FILE = "/tmp/info_user.json";
 // const std::string PATH_KASSA1 = "/home/raipo/share/kassa1";
 const std::string PATH_KASSA1 = "/tmp/kassa1";
@@ -68,7 +66,7 @@ Users load_users() {
         throw std::runtime_error(::fmt::format("Ошибка открытия файла БД '{}': {}", JSON_FILE, strerror(err)));
     }
 
-    json j;
+    ::nlohmann::json j;
     f >> j;
 
     return j.get<Users>();
