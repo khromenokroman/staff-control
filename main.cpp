@@ -949,12 +949,12 @@ int main() {
 
     svr.Get("/employees", [](const httplib::Request &, httplib::Response &res) {
         try {
-            Users users = load_users();
+            auto const users = load_users();
             res.set_content(build_employees_page(users), "text/html; charset=utf-8");
-        }catch (std::exception &e) {
+        } catch (std::exception &e) {
             std::cout << e.what() << std::endl;
         }
-        });
+    });
 
     svr.Get("/add", [](const httplib::Request &, httplib::Response &res) {
         res.set_content(build_add_page(), "text/html; charset=utf-8");
