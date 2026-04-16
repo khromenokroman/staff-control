@@ -1078,8 +1078,8 @@ int main() {
         try {
             auto const users = load_users();
             res.set_content(build_employees_page(users), "text/html; charset=utf-8");
-        } catch (std::exception &e) {
-            res.set_content(build_error_page(e.what()), "text/html; charset=utf-8");
+        } catch (std::exception &ex) {
+            res.set_content(build_error_page(ex.what()), "text/html; charset=utf-8");
         }
     });
 
@@ -1104,8 +1104,8 @@ int main() {
             save_users(users);
 
             res.set_redirect("/employees");
-        } catch (std::exception &e) {
-            res.set_content(build_error_page(e.what()), "text/html; charset=utf-8");
+        } catch (std::exception &ex) {
+            res.set_content(build_error_page(ex.what()), "text/html; charset=utf-8");
         }
     });
 
@@ -1120,14 +1120,18 @@ int main() {
             }
 
             res.set_redirect("/employees");
-        } catch (std::exception &e) {
-            res.set_content(build_error_page(e.what()), "text/html; charset=utf-8");
+        } catch (std::exception &ex) {
+            res.set_content(build_error_page(ex.what()), "text/html; charset=utf-8");
         }
     });
 
     svr.Get("/export", [](const httplib::Request &, httplib::Response &res) {
-        export_to_kassa();
-        res.set_content(build_export_page(), "text/html; charset=utf-8");
+        try {
+            export_to_kassa();
+            res.set_content(build_export_page(), "text/html; charset=utf-8");
+        } catch (std::exception &ex) {
+            res.set_content(build_error_page(ex.what()), "text/html; charset=utf-8");
+        }
     });
 
     std::cout << "Server started on http://localhost:8080\n";
