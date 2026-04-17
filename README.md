@@ -47,7 +47,7 @@ apt install -y ./staff-control_<версия>_amd64.deb
 - бинарник: `/usr/bin/staff-control`
 - конфиг(Настройки): `/etc/staff-control/cfg.json`
 - unit-файл systemd: `/usr/lib/systemd/system/staff-control.service`
-- БД: `/tmp/staff-control/staff-control.json`
+- БД: `/var/staff-control/staff-control.json`
 
 ### БД staff-control.json
 ````json
@@ -82,7 +82,7 @@ apt install -y ./staff-control_<версия>_amd64.deb
 {
   "port": 8080,
   "log_level": 6,
-  "path_db": "/tmp/staff-control/staff-control.json",
+  "path_db": "/var/staff-control/staff-control.json",
   "targets": [
     {
       "name": "kassa1",
