@@ -1,4 +1,5 @@
 #include <fmt/format.h>
+#include <iconv.h>
 #include <nlohmann/json.hpp>
 #include <syslog.h>
 
@@ -1104,8 +1105,48 @@ std::string StaffControl::build_export_page() const {
 </html>
 )html";
 }
+std::string StaffControl::convert_utf8_to_cp1251(std::string_view utf8) const {
+    using iconv_handle = std::unique_ptr<void, decltype(&iconv_close)>;
+
+    iconv_handle conv(iconv_open("CP1251", "UTF-8"), &iconv_close);
+    if (conv.get() == (iconv_t) -1) {
+        throw std::runtime_error("Не удалось подготовить преобразование текста в кодировку CP1251.");
+    }
+
+    size_t in_left = utf8.size();
+    size_t out_left = utf8.size() * 4 + 32;
+    const char *in_ptr = utf8.data();
+
+    std::string result(out_left, '\0');
+    char *out_ptr = result.data();
+
+    while (in_left > 0) {
+        size_t rc = iconv(conv.get(), const_cast<char **>(&in_ptr), &in_left, &out_ptr, &out_left);
+
+        if (rc == static_cast<size_t>(-1)) {
+            if (errno == EILSEQ) {
+                throw std::runtime_error("Текст содержит символы, которые нельзя преобразовать в CP1251.");
+            }
+            if (errno == EINVAL) {
+                throw std::runtime_error("Текст повреждён или содержит неполную последовательность UTF-8.");
+            }
+            if (errno == E2BIG) {
+                throw std::runtime_error("Не хватило памяти для преобразования текста в CP1251.");
+            }
+            throw std::runtime_error("Не удалось преобразовать текст в CP1251.");
+        }
+    }
+
+    result.resize(result.size() - out_left);
+    return result;
+}
 
 void StaffControl::write_kassa_file(Target const &target, Users const &users) const {
+    if (std::filesystem::exists(::fmt::format("{}/{}", target.path, target.flag_name))) {
+        throw std::runtime_error(
+                ::fmt::format("Касса '{}' находится в обработке другого задания попробуйте выполнить задание позже...",
+                              target.name.c_str()));
+    }
     std::ofstream flag_file(::fmt::format("{}/{}", target.path, target.flag_name));
     if (!flag_file.is_open()) {
         auto err = errno;
@@ -1137,7 +1178,8 @@ void StaffControl::write_kassa_file(Target const &target, Users const &users) co
         throw std::runtime_error(::fmt::format("Ошибка создания файла выгрузки на кассу '{}/{}': {}", target.path,
                                                target.file_name, strerror(err)));
     }
-    main_file << text.str();
+    auto cp1251_text = convert_utf8_to_cp1251(text.str());
+    main_file << cp1251_text;
     main_file.close();
     syslog(LOG_INFO, "Создан файл для выгрузки на кассу '%s/%s' с данными:\n%s", target.path.c_str(),
            target.file_name.c_str(), text.str().c_str());
@@ -1148,6 +1190,9 @@ void StaffControl::write_kassa_file(Target const &target, Users const &users) co
     while (attempt < 10) {
         if (!std::filesystem::exists(::fmt::format("{}/{}", target.path, target.flag_name))) {
             syslog(LOG_INFO, "Касса '%s' обработала файл выгрузки ", target.name.c_str());
+            std::this_thread::sleep_for(std::chrono::seconds(3)); // ждем для того, чтобы касса успела записать признак
+            std::filesystem::remove(::fmt::format("{}/{}", target.path, target.file_name));
+            syslog(LOG_INFO, "Удален файл выгрузки '%s/%s'", target.path.c_str(), target.file_name.c_str());
             return;
         }
         ++attempt;

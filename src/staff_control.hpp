@@ -44,6 +44,7 @@ private:
     [[nodiscard]] std::string build_add_page() const;
     [[nodiscard]] std::string build_employees_page(const Users &users) const;
     [[nodiscard]] std::string build_export_page() const;
+    [[nodiscard]] std::string convert_utf8_to_cp1251(std::string_view utf8) const;
     void save_users(Users const &users);
     void write_kassa_file(Target const &target, Users const &users) const;
     void export_to_kassa() const;
