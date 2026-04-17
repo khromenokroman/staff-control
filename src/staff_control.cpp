@@ -1145,7 +1145,9 @@ void StaffControl::write_kassa_file(std::string_view path, std::string_view f_na
 }
 void StaffControl::export_to_kassa() const {
     auto const users = load_users();
+    syslog(LOG_INFO, "Касс на выгрузку %zu шт.", m_config.targets.size());
     for (auto const &target: m_config.targets) {
+        syslog(LOG_INFO, "target:\n%s", ::nlohmann::json(target).dump(4).c_str());
         write_kassa_file(target.path, target.file_name, target.flag_name, users);
     }
 }

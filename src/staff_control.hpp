@@ -8,7 +8,7 @@ struct Target {
     std::string file_name; // 32
     std::string flag_name; // 32
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Target, name, path)
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(Target, name, path, file_name, flag_name)
 };
 struct Config {
     std::string path_db{}; // 32
