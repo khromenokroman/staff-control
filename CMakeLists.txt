@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.18.4)
 project(staff-control
-        VERSION 0.2.1
+        VERSION 0.2.2
         LANGUAGES CXX
         HOMEPAGE_URL "https://github.com/khromenokroman/staff-control")
 
