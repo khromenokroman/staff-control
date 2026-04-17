@@ -3,4 +3,8 @@ set -e
 
 chmod 666 /tmp/staff-control/staff-control.json
 
+systemctl daemon-reload
+systemctl enable staff-control
+systemctl start staff-control
+
 exit 0
