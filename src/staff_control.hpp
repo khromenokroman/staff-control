@@ -45,8 +45,7 @@ private:
     [[nodiscard]] std::string build_employees_page(const Users &users) const;
     [[nodiscard]] std::string build_export_page() const;
     void save_users(Users const &users);
-    void write_kassa_file(std::string_view path, std::string_view f_name, std::string_view fl_name,
-                          Users const &users) const;
+    void write_kassa_file(Target const &target, Users const &users) const;
     void export_to_kassa() const;
 
     httplib::Server m_server; // 752

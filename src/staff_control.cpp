@@ -1105,17 +1105,16 @@ std::string StaffControl::build_export_page() const {
 )html";
 }
 
-void StaffControl::write_kassa_file(std::string_view path, std::string_view f_name, std::string_view fl_name,
-                                    Users const &users) const {
-    std::ofstream flag_file(::fmt::format("{}/{}", path, fl_name));
+void StaffControl::write_kassa_file(Target const &target, Users const &users) const {
+    std::ofstream flag_file(::fmt::format("{}/{}", target.path, target.flag_name));
     if (!flag_file.is_open()) {
         auto err = errno;
-        throw std::runtime_error(::fmt::format("Ошибка создания файла флага для выгрузки на кассу '{}/{}': {}", path,
-                                               fl_name, strerror(err)));
+        throw std::runtime_error(::fmt::format("Ошибка создания файла флага для выгрузки на кассу '{}/{}': {}",
+                                               target.path, target.flag_name, strerror(err)));
     }
     flag_file << "";
     flag_file.close();
-    syslog(LOG_INFO, "Создан файл флаг для выгрузки на кассу '%s/%s'", path.data(), fl_name.data());
+    syslog(LOG_INFO, "Создан файл флаг для выгрузки на кассу '%s/%s'", target.path.c_str(), target.flag_name.c_str());
 
     std::ostringstream text;
     text << "##@@&&\n#\n$$$DELETEALLUSERS\n$$$ADDUSERS\n";
@@ -1132,22 +1131,36 @@ void StaffControl::write_kassa_file(std::string_view path, std::string_view f_na
         ++count;
     }
 
-    std::ofstream main_file(::fmt::format("{}/{}", path, f_name));
+    std::ofstream main_file(::fmt::format("{}/{}", target.path, target.file_name));
     if (!main_file.is_open()) {
         auto err = errno;
-        throw std::runtime_error(
-                ::fmt::format("Ошибка создания файла выгрузки на кассу '{}/{}': {}", path, f_name, strerror(err)));
+        throw std::runtime_error(::fmt::format("Ошибка создания файла выгрузки на кассу '{}/{}': {}", target.path,
+                                               target.file_name, strerror(err)));
     }
     main_file << text.str();
     main_file.close();
-    syslog(LOG_INFO, "Создан файл для выгрузки на кассу '%s/%s' с данными:\n%s", path.data(), fl_name.data(),
-           text.str().c_str());
+    syslog(LOG_INFO, "Создан файл для выгрузки на кассу '%s/%s' с данными:\n%s", target.path.c_str(),
+           target.file_name.c_str(), text.str().c_str());
+
+
+    syslog(LOG_INFO, "Ожидаю ответ от кассы '%s'", target.name.c_str());
+    std::size_t attempt = 0;
+    while (attempt < 10) {
+        if (!std::filesystem::exists(::fmt::format("{}/{}", target.path, target.flag_name))) {
+            syslog(LOG_INFO, "Касса '%s' обработала файл выгрузки ", target.name.c_str());
+            return;
+        }
+        ++attempt;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+    throw std::runtime_error(::fmt::format(
+            "Файлы выгрузки были созданы но ответ от кассы '{}' не был получен более чем за 10 сек.", target.name));
 }
 void StaffControl::export_to_kassa() const {
     auto const users = load_users();
     syslog(LOG_INFO, "Касс на выгрузку %zu шт.", m_config.targets.size());
     for (auto const &target: m_config.targets) {
         syslog(LOG_INFO, "target:\n%s", ::nlohmann::json(target).dump(4).c_str());
-        write_kassa_file(target.path, target.file_name, target.flag_name, users);
+        write_kassa_file(target, users);
     }
 }
