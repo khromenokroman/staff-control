@@ -22,7 +22,7 @@ install(FILES configuration/cfg.json
         DESTINATION /etc/staff-control/
 )
 install(FILES db/staff-control.json
-        DESTINATION /tmp/staff-control/
+        DESTINATION /vat/staff-control/
 )
 install(FILES systemd/staff-control.service
         DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system
