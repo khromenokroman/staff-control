@@ -1,7 +1,7 @@
 {
-  "port": 8080,
+  "port": 80,
   "log_level": 6,
-  "path_db": "/tmp/staff-control/staff-control.json",
+  "path_db": "/var/staff-control/staff-control.json",
   "targets": [
     {
       "name": "kassa1",
