@@ -108,6 +108,18 @@ apt install -y ./staff-control_<версия>_amd64.deb
     - `path` — путь к директории кассы
     - `file_name` — имя файла выгрузки
     - `flag_name` — имя флага выгрузки
+
+Возможные уровнилогирования:
+
+- `LOG_EMERG` — 0
+- `LOG_ALERT` — 1
+- `LOG_CRIT` — 2
+- `LOG_ERR` — 3
+- `LOG_WARNING` — 4
+- `LOG_NOTICE` — 5
+- `LOG_INFO` — 6
+- `LOG_DEBUG` — 7
+
 ## Запуск
 
 После установки сервис можно запускать так:
